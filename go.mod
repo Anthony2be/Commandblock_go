@@ -1,4 +1,4 @@
-module commandblock_go
+module github.com/anthony2be/commandblock_go
 
 go 1.16
 
