@@ -7,5 +7,5 @@ func main() {
 	var h [1]string
 	h[0] = "h"
 	e.RegisterFunction("pp", h[0])
-	e.Abort(true)
+	//e.Abort(true)
 }

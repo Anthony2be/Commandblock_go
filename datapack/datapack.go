@@ -18,8 +18,10 @@ type datapack_struct struct {
 }
 
 var function_lock = 0
+
 var datapack_functions []string
 
+//makes a new datapack
 func New(Datapack_name string, Namespace_id string, Pack_version int, Load_json string, Tick_json string, Datapack_description string) datapack_struct {
 	path, err := os.Getwd()
 	atexit.Register(stopAbrupt)
@@ -41,7 +43,7 @@ func New(Datapack_name string, Namespace_id string, Pack_version int, Load_json 
 
 	err = os.Mkdir(path+"/.temp", 0755)
 	if err != nil {
-		//retry 
+		//retry
 		e := os.RemoveAll(path + "/.temp")
 		if e != nil {
 			color.Red("Could not remove the temp folder")
@@ -71,7 +73,8 @@ func stopAbrupt() {
 	}
 }
 
-func (d datapack_struct) Abort (rem_datapack bool) {
+//Aborts the datapack generation
+func (d datapack_struct) Abort(rem_datapack bool) {
 	path, _ := os.Getwd()
 	color.Red("\n\n##############################\nABORTING THE DATAPACK GENERATION\n##############################\n\n\n")
 	_, err := os.Stat(fmt.Sprintf(path+"/.temp/%s", d.datapack_name))
@@ -80,19 +83,44 @@ func (d datapack_struct) Abort (rem_datapack bool) {
 		color.Red("Removed the datapack folder")
 	}
 
-	_, err2 := os.Stat(path+ "/.temp")
+	_, err2 := os.Stat(path + "/.temp")
 	if rem_datapack && !os.IsNotExist(err2) {
-		os.RemoveAll(path+"/.temp")
+		os.RemoveAll(path + "/.temp")
 		color.Red("Removed temp folder")
 	}
 
 	color.Red("Finished removing datapack related files. Shutting down system")
 }
 
-func (d datapack_struct) RegisterFunction (name string, content string){
-	if (name == d.load_json || name == d.tick_json){
-		function_lock ++
+func (d datapack_struct) RegisterFunction(name string, content string) {
+	path, _ := os.Getwd()
+	if name == d.load_json || name == d.tick_json {
+		function_lock++
 	}
 
-	
+	datapack_functions = append(datapack_functions, name)
+
+	err := os.MkdirAll(fmt.Sprintf("%s/.temp/%s/%s/functions/", path, d.datapack_name, d.namespace_id, /*name*/), 0755)
+	if err != nil {
+		//fmt.Println(err)
+		color.Red(fmt.Sprintf("ERROR : %s", err))
+		atexit.Exit(-1)
+	}
+
+	f, err := os.Create(fmt.Sprintf("%s/.temp/%s/%s/functions/%s.mcfunction", path, d.datapack_name, d.namespace_id, name))
+	if err != nil {
+		color.Red(fmt.Sprintf("ERROR : %s", err))
+		atexit.Exit(-1)
+	}
+	_, err2 := f.WriteString(content)
+	if err2 != nil {
+		color.Red(fmt.Sprintf("ERROR : %s", err))
+		f.Close()
+		atexit.Exit(-1)
+	}
+	err = f.Close()
+	if err != nil {
+		color.Red(fmt.Sprintf("ERROR : %s", err))
+		atexit.Exit(-1)
+	}
 }
