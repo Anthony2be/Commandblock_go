@@ -100,7 +100,7 @@ func (d datapack_struct) RegisterFunction(name string, content string) {
 
 	datapack_functions = append(datapack_functions, name)
 
-	err := os.MkdirAll(fmt.Sprintf("%s/.temp/%s/%s/functions/", path, d.datapack_name, d.namespace_id, /*name*/), 0755)
+	err := os.MkdirAll(fmt.Sprintf("%s/.temp/%s/%s/functions/", path, d.datapack_name, d.namespace_id /*name*/), 0755)
 	if err != nil {
 		//fmt.Println(err)
 		color.Red(fmt.Sprintf("ERROR : %s", err))
@@ -121,6 +121,26 @@ func (d datapack_struct) RegisterFunction(name string, content string) {
 	err = f.Close()
 	if err != nil {
 		color.Red(fmt.Sprintf("ERROR : %s", err))
+		atexit.Exit(-1)
+	}
+}
+
+func (d datapack_struct) json_value(load bool) string {
+	value := "{{\"values\":[\"%s:%s\"]}}"
+
+	if load {
+		json := fmt.Sprintf(value, d.namespace_id, d.load_json)
+		return json
+	} else {
+		json := fmt.Sprintf(value, d.namespace_id, d.tick_json)
+		return json
+	}
+}
+
+func (d datapack_struct) Generate(zip bool) {
+	color.Cyan("Commandblock_go is still in its Beta stages. If You find any bugs, please send a screenshot of the terminal to \"Terroid#0490\" or \"Anthony2be#1900\" on Discord")
+	if function_lock < 2 {
+		color.Red(fmt.Sprintf("ERROR : Your Datapack doesn't contain a \"%s\" or a \"%s\" function or both", d.load_json, d.tick_json))
 		atexit.Exit(-1)
 	}
 }
