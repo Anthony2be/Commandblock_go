@@ -17,6 +17,9 @@ type datapack_struct struct {
 	datapack_description string
 }
 
+var function_lock = 0
+var datapack_functions []string
+
 func New(Datapack_name string, Namespace_id string, Pack_version int, Load_json string, Tick_json string, Datapack_description string) datapack_struct {
 	path, err := os.Getwd()
 	atexit.Register(stopAbrupt)
@@ -38,10 +41,17 @@ func New(Datapack_name string, Namespace_id string, Pack_version int, Load_json 
 
 	err = os.Mkdir(path+"/.temp", 0755)
 	if err != nil {
-		//os.RemoveAll(path + "/.temp")
-		//fmt.Println(err)
-		color.Red(fmt.Sprintf("ERROR : Oh-oh! An Exception occured while generating a temporary folder at dir \"%s\": %d", path, err))
-		atexit.Exit(-1)
+		//retry 
+		e := os.RemoveAll(path + "/.temp")
+		if e != nil {
+			color.Red("Could not remove the temp folder")
+			atexit.Exit(-1)
+		}
+		err2 := os.Mkdir(path+"/.temp", 0755)
+		if err2 != nil {
+			color.Red(fmt.Sprintf("ERROR : Oh-oh! An Exception occured while generating a temporary folder at dir \"%s\": %d", path, err))
+			atexit.Exit(-1)
+		}
 	}
 
 	return d
@@ -61,8 +71,28 @@ func stopAbrupt() {
 	}
 }
 
-//func RegisterFunction()
-
-func Abort(rem_datapack bool){
+func (d datapack_struct) Abort (rem_datapack bool) {
+	path, _ := os.Getwd()
 	color.Red("\n\n##############################\nABORTING THE DATAPACK GENERATION\n##############################\n\n\n")
+	_, err := os.Stat(fmt.Sprintf(path+"/.temp/%s", d.datapack_name))
+	if rem_datapack && !os.IsNotExist(err) {
+		os.RemoveAll(fmt.Sprintf(path+"/.temp/%s", d.datapack_name))
+		color.Red("Removed the datapack folder")
+	}
+
+	_, err2 := os.Stat(path+ "/.temp")
+	if rem_datapack && !os.IsNotExist(err2) {
+		os.RemoveAll(path+"/.temp")
+		color.Red("Removed temp folder")
+	}
+
+	color.Red("Finished removing datapack related files. Shutting down system")
+}
+
+func (d datapack_struct) RegisterFunction (name string, content string){
+	if (name == d.load_json || name == d.tick_json){
+		function_lock ++
+	}
+
+	
 }
